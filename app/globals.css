@@ -12,7 +12,7 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 210 50% 98%;
     --foreground: 224 71.4% 4.1%;
     --card: 0 0% 100%;
     --card-foreground: 224 71.4% 4.1%;
@@ -40,30 +40,28 @@ body {
   }
 
   .dark {
-    --background: 224 71.4% 4.1%;
-    --foreground: 210 20% 98%;
-    --card: 224 71.4% 4.1%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 4.1%;
-    --popover-foreground: 210 20% 98%;
+    --background: 210 50% 95%;
+    --foreground: 224 71.4% 4.1%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 10% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 10% 10%;
     --primary: 263.4 70% 50.4%;
     --primary-foreground: 210 20% 98%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 224 10% 10%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 240 4% 46%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 224 10% 10%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 20% 98%;
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
+    --border: 210 40% 90%;
+    --input: 210 40% 90%;
     --ring: 263.4 70% 50.4%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --chart-gradient-start: 250 100% 85%;
+    --chart-gradient-end: 250 100% 95%;
+    --chart-line: 250 100% 75%;
   }
 }
 
@@ -72,6 +70,132 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-[#E3F2FF] dark:bg-[#E3F2FF] text-foreground;
   }
+}
+
+/* Enhanced dark mode styles for better visibility */
+.dark .chart-container {
+  @apply bg-transparent rounded-lg;
+}
+
+.dark .data-card {
+  @apply bg-transparent hover:bg-card/5 transition-all duration-300;
+}
+
+.dark .graph-line {
+  @apply stroke-[#8B5CF6] stroke-[2px];
+}
+
+.dark .graph-area {
+  @apply fill-[#C4B5FD]/40;
+}
+
+.dark .graph-dot {
+  @apply fill-[#8B5CF6] stroke-background stroke-2;
+}
+
+.dark .stat-value {
+  @apply text-white;
+}
+
+.dark .stat-label {
+  @apply text-white/90;
+}
+
+/* Improved card visibility in dark mode */
+.dark .card {
+  @apply bg-white/90 shadow-sm border-border/5;
+}
+
+/* Chart specific dark mode enhancements */
+.dark .recharts-cartesian-grid-horizontal line,
+.dark .recharts-cartesian-grid-vertical line {
+  @apply stroke-white/10;
+}
+
+.dark .recharts-text {
+  @apply fill-white/80;
+}
+
+.dark .recharts-tooltip-wrapper {
+  @apply !bg-card/95 backdrop-blur-sm border border-white/20 shadow-lg;
+}
+
+.dark .recharts-default-tooltip {
+  @apply !bg-transparent !border-none;
+}
+
+.dark .recharts-tooltip-label {
+  @apply text-white;
+}
+
+.dark .recharts-tooltip-item {
+  @apply text-white/90;
+}
+
+/* Price changes and indicators */
+.dark .price-up {
+  @apply text-green-400;
+}
+
+.dark .price-down {
+  @apply text-red-400;
+}
+
+/* Chart axis and labels */
+.dark .chart-axis text {
+  @apply fill-white/70;
+}
+
+.dark .chart-label {
+  @apply text-white/70;
+}
+
+/* Interactive elements */
+.interactive-card {
+  @apply transition-all duration-300;
+}
+
+.dark .interactive-card:hover {
+  @apply bg-card/5;
+}
+
+/* Data visualization elements */
+.dark .data-point {
+  @apply fill-[#8B5CF6] stroke-background stroke-2;
+}
+
+.dark .trend-line {
+  @apply stroke-[#8B5CF6] stroke-[2px];
+}
+
+.dark .area-gradient {
+  background: linear-gradient(180deg, rgba(167, 139, 250, 0.3) 0%, rgba(167, 139, 250, 0.1) 100%);
+}
+
+/* Y-axis values */
+.dark .y-axis-values {
+  @apply text-white/70 text-sm;
+}
+
+/* X-axis dates */
+.dark .x-axis-dates {
+  @apply text-white/60 text-xs;
+}
+
+/* Chart tooltips and overlays */
+.dark .chart-tooltip {
+  @apply bg-card/95 border border-white/20 shadow-lg backdrop-blur-sm 
+         text-white p-2 rounded-lg;
+}
+
+/* Grid lines */
+.dark .grid-lines {
+  @apply stroke-white/10 stroke-[0.5px];
+}
+
+/* Chart background */
+.dark .chart-bg {
+  background: linear-gradient(180deg, rgba(167, 139, 250, 0.2) 0%, rgba(167, 139, 250, 0.05) 100%);
 }

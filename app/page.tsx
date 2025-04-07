@@ -15,36 +15,48 @@ const queryClient = new QueryClient();
 export default function Home() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="container mx-auto px-4 py-6">
-        <h1 className="text-3xl font-bold mb-6">Coin Cash Dashboard</h1>
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 min-h-screen">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+          Coin Cash Dashboard
+        </h1>
         
-        <Tabs defaultValue="overview" className="mb-6">
-          <TabsList className="grid grid-cols-3 w-full max-w-md">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
+        <Tabs defaultValue="trending" className="space-y-4">
+          <TabsList className="grid w-full max-w-sm mx-auto grid-cols-3">
             <TabsTrigger value="trending">Trending</TabsTrigger>
             <TabsTrigger value="insights">Insights</TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="overview" className="mt-4">
-            <div className="grid grid-cols-1 md:grid-cols-[2fr_1.1fr] gap-4">
-              <div className="space-y-4">
-                <PriceCards />
-                <CryptoChart />
-                <MarketTable />
-              </div>
-              <div className="space-y-4">
-                <CryptoOverview />
-                <MarketHighlights />
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="trending" className="mt-4">
+          <TabsContent value="trending">
             <TrendingCryptos />
           </TabsContent>
           
-          <TabsContent value="insights" className="mt-4">
+          <TabsContent value="insights">
             <MarketInsights />
+          </TabsContent>
+          
+          <TabsContent value="overview">
+            <div className="grid grid-cols-1 lg:grid-cols-[1.8fr_1fr] gap-3 sm:gap-4">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="bg-background/50 rounded-xl p-2 sm:p-3">
+                  <PriceCards />
+                </div>
+                <div className="bg-background/50 rounded-xl p-2 sm:p-3">
+                  <CryptoChart />
+                </div>
+                <div className="bg-background/50 rounded-xl p-2 sm:p-3">
+                  <MarketTable />
+                </div>
+              </div>
+              <div className="space-y-3 sm:space-y-4">
+                <div className="bg-background/50 rounded-xl p-2 sm:p-3">
+                  <CryptoOverview />
+                </div>
+                <div className="bg-background/50 rounded-xl p-2 sm:p-3">
+                  <MarketHighlights />
+                </div>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

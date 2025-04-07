@@ -125,7 +125,7 @@ export function PriceCards() {
   
   return (
     <motion.div 
-      className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 px-5 pt-5"
+      className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
@@ -140,42 +140,48 @@ export function PriceCards() {
           }}
         >
           <Card
-            className="shadow-sm border-none flex justify-between items-end p-5 overflow-hidden relative rounded-xl bg-gradient-to-br from-card to-card/95 backdrop-blur-sm group"
+            className="shadow-sm border-none overflow-hidden relative rounded-xl bg-gradient-to-br from-card to-card/95 backdrop-blur-sm group p-0"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-background/80 to-background/40 backdrop-blur-[2px] z-0"></div>
-            <div className="flex gap-4 relative z-10">
+            <div className="relative z-10 p-3 sm:p-4 flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-center">
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className={`flex-shrink-0 h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center ${crypto.bgColor} rounded-xl shadow-sm group-hover:shadow-md transition-all duration-300`}
+                >
+                  {crypto.icon}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-medium text-muted-foreground truncate">
+                    {crypto.name}
+                  </p>
+                  <p className="text-base sm:text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/80 group-hover:from-primary group-hover:to-primary/80 transition-all duration-300">
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "USD",
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                      notation: "compact",
+                      compactDisplay: "short"
+                    }).format(crypto.price)}
+                  </p>
+                </div>
+              </div>
+
               <div
-                className={`flex h-14 w-14 items-center justify-center ${crypto.bgColor} rounded-xl shadow-sm group-hover:shadow-md transition-all duration-300`}
+                className={`flex items-center gap-1 flex-shrink-0 ${
+                  crypto.changeDirection === "up"
+                    ? "text-green-500"
+                    : "text-red-500"
+                }`}
               >
-                {crypto.icon}
+                {crypto.changeDirection === "down" ? (
+                  <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4" />
+                ) : (
+                  <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
+                )}
+                <span className="text-xs sm:text-sm font-medium whitespace-nowrap">{crypto.change}</span>
               </div>
-
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">
-                  {crypto.name}
-                </p>
-                <p className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/80 group-hover:from-primary group-hover:to-primary/80 transition-all duration-300">
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "USD",
-                  }).format(crypto.price)}
-                </p>
-              </div>
-            </div>
-
-            <div
-              className={`flex items-center gap-1 relative z-10 ${
-                crypto.changeDirection === "up"
-                  ? "text-green-500"
-                  : "text-red-500"
-              }`}
-            >
-              {crypto.changeDirection === "down" ? (
-                <TrendingDown className="h-4 w-4" />
-              ) : (
-                <TrendingUp className="h-4 w-4" />
-              )}
-              <span className="text-sm font-medium">{crypto.change}</span>
             </div>
           </Card>
         </motion.div>

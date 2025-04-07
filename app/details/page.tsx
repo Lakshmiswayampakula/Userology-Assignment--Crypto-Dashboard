@@ -119,30 +119,30 @@ export default function DetailsPage() {
   }, [selectedCrypto]);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 p-4 sm:p-6 md:p-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 border-b pb-4 sm:pb-6">
-        <Activity className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+    <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6 p-3 sm:p-4 md:p-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 border-b pb-3 sm:pb-4">
+        <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
         <div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
             Detailed Analysis
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             In-depth weather and cryptocurrency data analysis
           </p>
         </div>
       </div>
 
-      <Tabs defaultValue="weather" className="space-y-4 sm:space-y-6" onValueChange={playSound}>
-        <TabsList className="grid w-full max-w-md grid-cols-2 mx-auto">
-          <TabsTrigger value="weather" className="text-sm sm:text-base">Weather Analysis</TabsTrigger>
-          <TabsTrigger value="crypto" className="text-sm sm:text-base">Crypto Analysis</TabsTrigger>
+      <Tabs defaultValue="weather" className="space-y-3 sm:space-y-4" onValueChange={playSound}>
+        <TabsList className="grid w-full max-w-sm grid-cols-2 mx-auto">
+          <TabsTrigger value="weather" className="text-sm">Weather Analysis</TabsTrigger>
+          <TabsTrigger value="crypto" className="text-sm">Crypto Analysis</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="weather" className="space-y-4 sm:space-y-6">
+        <TabsContent value="weather" className="space-y-3 sm:space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
             <div>
-              <h2 className="text-xl sm:text-2xl font-semibold">Weather History</h2>
-              <p className="text-sm text-muted-foreground">Temperature and humidity trends</p>
+              <h2 className="text-lg sm:text-xl font-semibold">Weather History</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground">Temperature and humidity trends</p>
             </div>
             <Select 
               value={selectedCity} 
@@ -151,7 +151,7 @@ export default function DetailsPage() {
                 setSelectedCity(value);
               }}
             >
-              <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectTrigger className="w-full sm:w-[160px]">
                 <SelectValue placeholder="Select city" />
               </SelectTrigger>
               <SelectContent>
@@ -163,58 +163,63 @@ export default function DetailsPage() {
             </Select>
           </div>
 
-          <div className="grid gap-4 sm:gap-6">
+          <div className="grid gap-3 sm:gap-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <Card className="hover:shadow-lg transition-all duration-300">
-                <CardHeader className="p-4 sm:p-6">
-                  <div className="flex items-center space-x-3">
-                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+              <Card className="hover:shadow-md transition-all duration-300">
+                <CardHeader className="p-2 sm:p-3 md:p-4">
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                     <div>
-                      <CardTitle className="text-lg sm:text-xl">Temperature Trend</CardTitle>
-                      <CardDescription className="text-sm">
+                      <CardTitle className="text-sm sm:text-base">Temperature Trend</CardTitle>
+                      <CardDescription className="text-xs">
                         Temperature variation over the next 24 hours
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-4 sm:p-6">
-                  <div className="h-[200px] sm:h-[250px] md:h-[350px]">
+                <CardContent className="p-2 sm:p-3 md:p-4">
+                  <div className="h-[160px] sm:h-[200px] md:h-[250px] w-full">
                     {loadingWeather ? (
                       <div className="w-full h-full flex items-center justify-center">
                         <Skeleton className="w-full h-full" />
                       </div>
                     ) : (
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={weatherHistory}>
+                        <LineChart 
+                          data={weatherHistory}
+                          margin={{ top: 5, right: 5, left: -15, bottom: 5 }}
+                        >
                           <CartesianGrid strokeDasharray="3 3" className="opacity-50" />
                           <XAxis 
                             dataKey="date" 
-                            tick={{ fontSize: 10 }}
+                            tick={{ fontSize: 8 }}
                             interval="preserveStartEnd"
+                            height={30}
                           />
                           <YAxis 
-                            tick={{ fontSize: 10 }}
-                            width={30}
+                            tick={{ fontSize: 8 }}
+                            width={25}
                           />
                           <Tooltip
                             contentStyle={{
                               backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                              borderRadius: '8px',
+                              borderRadius: '6px',
                               border: 'none',
-                              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                              fontSize: '12px'
+                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                              fontSize: '11px',
+                              padding: '4px 8px'
                             }}
                           />
                           <Line
                             type="monotone"
                             dataKey="temperature"
                             stroke="hsl(var(--primary))"
-                            strokeWidth={2}
-                            dot={{ fill: "hsl(var(--primary))", r: 3 }}
+                            strokeWidth={1.5}
+                            dot={{ fill: "hsl(var(--primary))", r: 2 }}
                             name="Temperature (°C)"
                           />
                         </LineChart>
@@ -230,67 +235,62 @@ export default function DetailsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <Card className="hover:shadow-lg transition-all duration-300">
-                <CardHeader className="p-4 sm:p-6">
-                  <div className="flex items-center space-x-3">
-                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+              <Card className="hover:shadow-md transition-all duration-300">
+                <CardHeader className="p-2 sm:p-3 md:p-4">
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                     <div>
-                      <CardTitle className="text-lg sm:text-xl">Weather Data Table</CardTitle>
-                      <CardDescription className="text-sm">
+                      <CardTitle className="text-sm sm:text-base">Weather Data Table</CardTitle>
+                      <CardDescription className="text-xs">
                         Detailed weather information by date
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-4 sm:p-6">
+                <CardContent className="p-0 sm:p-2">
                   {loadingWeather ? (
-                    <Skeleton className="w-full h-[300px]" />
+                    <Skeleton className="w-full h-[200px] sm:h-[250px]" />
                   ) : (
-                    <div className="overflow-x-auto -mx-4 sm:mx-0">
-                      <div className="min-w-full inline-block align-middle">
-                        <div className="overflow-hidden">
-                          <table className="min-w-full divide-y divide-border">
-                            <thead className="bg-muted/50">
-                              <tr>
-                                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                  Date
-                                </th>
-                                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                  Temperature
-                                </th>
-                                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                  Humidity
-                                </th>
-                                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                  Conditions
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="bg-background divide-y divide-border">
-                              {weatherHistory.map((item, index) => (
-                                <tr 
-                                  key={index} 
-                                  className="hover:bg-muted/50 cursor-pointer transition-colors"
-                                  onClick={playSound}
-                                >
-                                  <td className="px-3 py-3 whitespace-nowrap text-sm">
-                                    {item.date}
-                                  </td>
-                                  <td className="px-3 py-3 whitespace-nowrap text-sm">
-                                    {item.temperature}°C
-                                  </td>
-                                  <td className="px-3 py-3 whitespace-nowrap text-sm">
-                                    {item.humidity}%
-                                  </td>
-                                  <td className="px-3 py-3 whitespace-nowrap text-sm">
-                                    {item.conditions || 'N/A'}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
+                    <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-primary/10 scrollbar-track-transparent">
+                      <table className="w-full divide-y divide-border text-xs sm:text-sm">
+                        <thead className="bg-muted/50">
+                          <tr>
+                            <th scope="col" className="px-2 py-2 text-left font-medium text-muted-foreground uppercase tracking-wider">
+                              Date
+                            </th>
+                            <th scope="col" className="px-2 py-2 text-left font-medium text-muted-foreground uppercase tracking-wider">
+                              Temp
+                            </th>
+                            <th scope="col" className="px-2 py-2 text-left font-medium text-muted-foreground uppercase tracking-wider">
+                              Humid
+                            </th>
+                            <th scope="col" className="px-2 py-2 text-left font-medium text-muted-foreground uppercase tracking-wider">
+                              Cond
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-background divide-y divide-border">
+                          {weatherHistory.slice(0, 5).map((item, index) => (
+                            <tr 
+                              key={index} 
+                              className="hover:bg-muted/50 transition-colors"
+                            >
+                              <td className="px-2 py-2 whitespace-nowrap">
+                                {item.date}
+                              </td>
+                              <td className="px-2 py-2 whitespace-nowrap">
+                                {item.temperature}°C
+                              </td>
+                              <td className="px-2 py-2 whitespace-nowrap">
+                                {item.humidity}%
+                              </td>
+                              <td className="px-2 py-2 whitespace-nowrap">
+                                {item.conditions || 'N/A'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   )}
                 </CardContent>
@@ -299,11 +299,11 @@ export default function DetailsPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="crypto" className="space-y-4 sm:space-y-6">
+        <TabsContent value="crypto" className="space-y-3 sm:space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
             <div>
-              <h2 className="text-xl sm:text-2xl font-semibold">Cryptocurrency History</h2>
-              <p className="text-sm text-muted-foreground">Price and volume trends</p>
+              <h2 className="text-lg sm:text-xl font-semibold">Cryptocurrency History</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground">Price and volume trends</p>
             </div>
             <Select 
               value={selectedCrypto} 
@@ -312,8 +312,8 @@ export default function DetailsPage() {
                 setSelectedCrypto(value);
               }}
             >
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Select cryptocurrency" />
+              <SelectTrigger className="w-full sm:w-[160px]">
+                <SelectValue placeholder="Select crypto" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="bitcoin">Bitcoin</SelectItem>
@@ -324,58 +324,68 @@ export default function DetailsPage() {
             </Select>
           </div>
 
-          <div className="grid gap-4 sm:gap-6">
+          <div className="grid gap-3 sm:gap-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <Card className="hover:shadow-lg transition-all duration-300">
-                <CardHeader className="p-4 sm:p-6">
-                  <div className="flex items-center space-x-3">
-                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+              <Card className="hover:shadow-md transition-all duration-300">
+                <CardHeader className="p-2 sm:p-3 md:p-4">
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                     <div>
-                      <CardTitle className="text-lg sm:text-xl">Price Trend</CardTitle>
-                      <CardDescription className="text-sm">
+                      <CardTitle className="text-sm sm:text-base">Price Trend</CardTitle>
+                      <CardDescription className="text-xs">
                         Price variation over the last 30 days
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-4 sm:p-6">
-                  <div className="h-[200px] sm:h-[250px] md:h-[350px]">
+                <CardContent className="p-2 sm:p-3 md:p-4">
+                  <div className="h-[160px] sm:h-[200px] md:h-[250px] w-full">
                     {loadingCrypto ? (
                       <div className="w-full h-full flex items-center justify-center">
                         <Skeleton className="w-full h-full" />
                       </div>
                     ) : (
                       <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={cryptoHistory}>
+                        <AreaChart 
+                          data={cryptoHistory}
+                          margin={{ top: 5, right: 5, left: -15, bottom: 5 }}
+                        >
                           <CartesianGrid strokeDasharray="3 3" className="opacity-50" />
                           <XAxis 
                             dataKey="date" 
-                            tick={{ fontSize: 10 }}
+                            tick={{ fontSize: 8 }}
                             interval="preserveStartEnd"
+                            height={30}
                           />
                           <YAxis 
-                            tick={{ fontSize: 10 }}
-                            width={40}
+                            tick={{ fontSize: 8 }}
+                            width={45}
+                            tickFormatter={(value) => `$${value.toLocaleString(undefined, {
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 0
+                            })}`}
                           />
                           <Tooltip
                             contentStyle={{
                               backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                              borderRadius: '8px',
+                              borderRadius: '6px',
                               border: 'none',
-                              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                              fontSize: '12px'
+                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                              fontSize: '11px',
+                              padding: '4px 8px'
                             }}
+                            formatter={(value: number) => [`$${value.toLocaleString()}`, 'Price']}
                           />
                           <Area
                             type="monotone"
                             dataKey="price"
                             stroke="hsl(var(--primary))"
                             fill="hsl(var(--primary)/0.2)"
-                            strokeWidth={2}
+                            strokeWidth={1.5}
                             name="Price (USD)"
                           />
                         </AreaChart>
@@ -391,67 +401,65 @@ export default function DetailsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <Card className="hover:shadow-lg transition-all duration-300">
-                <CardHeader className="p-4 sm:p-6">
-                  <div className="flex items-center space-x-3">
-                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+              <Card className="hover:shadow-md transition-all duration-300">
+                <CardHeader className="p-2 sm:p-3 md:p-4">
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                     <div>
-                      <CardTitle className="text-lg sm:text-xl">Crypto Data Table</CardTitle>
-                      <CardDescription className="text-sm">
+                      <CardTitle className="text-sm sm:text-base">Crypto Data Table</CardTitle>
+                      <CardDescription className="text-xs">
                         Detailed cryptocurrency information by date
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-4 sm:p-6">
+                <CardContent className="p-0 sm:p-2">
                   {loadingCrypto ? (
-                    <Skeleton className="w-full h-[300px]" />
+                    <Skeleton className="w-full h-[200px] sm:h-[250px]" />
                   ) : (
-                    <div className="overflow-x-auto -mx-4 sm:mx-0">
-                      <div className="min-w-full inline-block align-middle">
-                        <div className="overflow-hidden">
-                          <table className="min-w-full divide-y divide-border">
-                            <thead className="bg-muted/50">
-                              <tr>
-                                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                  Date
-                                </th>
-                                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                  Price
-                                </th>
-                                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                  Volume
-                                </th>
-                                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                  Market Cap
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="bg-background divide-y divide-border">
-                              {cryptoHistory.map((item, index) => (
-                                <tr 
-                                  key={index} 
-                                  className="hover:bg-muted/50 cursor-pointer transition-colors"
-                                  onClick={playSound}
-                                >
-                                  <td className="px-3 py-3 whitespace-nowrap text-sm">
-                                    {item.date}
-                                  </td>
-                                  <td className="px-3 py-3 whitespace-nowrap text-sm">
-                                    ${item.price.toLocaleString()}
-                                  </td>
-                                  <td className="px-3 py-3 whitespace-nowrap text-sm">
-                                    ${item.volume.toLocaleString()}
-                                  </td>
-                                  <td className="px-3 py-3 whitespace-nowrap text-sm">
-                                    ${item.marketCap.toLocaleString()}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
+                    <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-primary/10 scrollbar-track-transparent">
+                      <table className="w-full divide-y divide-border text-xs sm:text-sm">
+                        <thead className="bg-muted/50">
+                          <tr>
+                            <th scope="col" className="px-2 py-2 text-left font-medium text-muted-foreground uppercase tracking-wider">
+                              Date
+                            </th>
+                            <th scope="col" className="px-2 py-2 text-left font-medium text-muted-foreground uppercase tracking-wider">
+                              Price
+                            </th>
+                            <th scope="col" className="px-2 py-2 text-left font-medium text-muted-foreground uppercase tracking-wider">
+                              Vol
+                            </th>
+                            <th scope="col" className="px-2 py-2 text-left font-medium text-muted-foreground uppercase tracking-wider">
+                              MCap
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-background divide-y divide-border">
+                          {cryptoHistory.slice(0, 5).map((item, index) => (
+                            <tr 
+                              key={index} 
+                              className="hover:bg-muted/50 transition-colors"
+                            >
+                              <td className="px-2 py-2 whitespace-nowrap">
+                                {item.date}
+                              </td>
+                              <td className="px-2 py-2 whitespace-nowrap">
+                                ${item.price.toLocaleString(undefined, {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2
+                                })}
+                              </td>
+                              <td className="px-2 py-2 whitespace-nowrap">
+                                ${(item.volume / 1e6).toFixed(1)}M
+                              </td>
+                              <td className="px-2 py-2 whitespace-nowrap">
+                                ${(item.marketCap / 1e9).toFixed(1)}B
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   )}
                 </CardContent>
