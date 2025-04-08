@@ -41,49 +41,6 @@ interface WeatherData {
   hourlyForecast: HourlyForecast[];
 }
 
-interface OpenWeatherOneCallData {
-  current: {
-    temp: number;
-    humidity: number;
-    feels_like: number;
-    pressure: number;
-    wind_speed: number;
-    wind_deg: number;
-    sunrise: number;
-    sunset: number;
-    uvi: number;
-    weather: Array<{
-      main: string;
-      description: string;
-    }>;
-  };
-  hourly: Array<{
-    dt: number;
-    temp: number;
-    weather: Array<{
-      main: string;
-    }>;
-  }>;
-  daily: Array<{
-    dt: number;
-    temp: {
-      min: number;
-      max: number;
-      day: number;
-    };
-    weather: Array<{
-      main: string;
-    }>;
-  }>;
-  alerts?: Array<{
-    event: string;
-    description: string;
-    tags?: string[];
-    start: number;
-    end: number;
-  }>;
-}
-
 interface WeatherAlert {
   event: string;
   description: string;
@@ -200,6 +157,8 @@ interface ForecastResponse {
     dt: number;
     main: {
       temp: number;
+      temp_min: number;
+      temp_max: number;
     };
     weather: Array<{
       main: string;
@@ -221,120 +180,105 @@ function WeatherDetailsDialog({ city, isOpen, onClose }: {
       try {
         setLoading(true);
         setError(null);
-        
-        // Get location data first
-        const geoResponse = await fetch(
-          `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
-        );
-        
-        if (!geoResponse.ok) {
-          const errorData = await geoResponse.json();
-          throw new Error(`Location API Error: ${errorData.message || 'Failed to fetch location data'}`);
-        }
-        
-        const [geoData] = await geoResponse.json();
-        
-        if (!geoData) {
-          throw new Error('Location not found');
+
+        // Verify API key
+        if (!process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY) {
+          throw new Error('OpenWeather API key is not configured');
         }
 
-        // Fetch current weather and forecast in one call
-        const oneCallResponse = await fetch(
-          `https://api.openweathermap.org/data/2.5/onecall?lat=${geoData.lat}&lon=${geoData.lon}&units=metric&exclude=minutely&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
+        // Fetch current weather data
+        const currentResponse = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
         );
-        
-        if (!oneCallResponse.ok) {
-          const errorData = await oneCallResponse.json();
-          throw new Error(`Weather API Error: ${errorData.message || 'Failed to fetch weather data'} (Status: ${oneCallResponse.status})`);
-        }
-        
-        const oneCallData = await oneCallResponse.json() as OpenWeatherOneCallData;
 
-        // Fetch air quality data
-        const airQualityResponse = await fetch(
-          `https://api.openweathermap.org/data/2.5/air_pollution?lat=${geoData.lat}&lon=${geoData.lon}&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
+        if (!currentResponse.ok) {
+          const errorData = await currentResponse.json();
+          console.error('Weather API Error:', {
+            status: currentResponse.status,
+            statusText: currentResponse.statusText,
+            error: errorData
+          });
+          throw new Error(`Weather API Error: ${errorData.message || 'Failed to fetch weather data'}`);
+        }
+
+        const currentData = await currentResponse.json();
+
+        // Fetch forecast data
+        const forecastResponse = await fetch(
+          `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
         );
-        
-        if (!airQualityResponse.ok) {
-          const errorData = await airQualityResponse.json();
-          throw new Error(`Air Quality API Error: ${errorData.message || 'Failed to fetch air quality data'} (Status: ${airQualityResponse.status})`);
-        }
-        
-        const airQualityData = await airQualityResponse.json();
 
-        // Process hourly forecast
-        const hourlyForecast = oneCallData.hourly.slice(0, 8).map((item: OpenWeatherOneCallData['hourly'][0]) => ({
+        if (!forecastResponse.ok) {
+          const errorData = await forecastResponse.json();
+          console.error('Forecast API Error:', {
+            status: forecastResponse.status,
+            statusText: forecastResponse.statusText,
+            error: errorData
+          });
+          throw new Error(`Forecast API Error: ${errorData.message || 'Failed to fetch forecast data'}`);
+        }
+
+        const forecastData = await forecastResponse.json();
+
+        // Process hourly forecast (next 24 hours with 3-hour intervals)
+        const hourlyForecast = forecastData.list.slice(0, 8).map((item: ForecastResponse['list'][0]) => ({
           time: new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', hour12: true }),
-          temp: Math.round(item.temp),
+          temp: Math.round(item.main.temp),
           conditions: item.weather[0].main,
         }));
 
         // Process 5-day forecast
-        const fiveDayForecast = oneCallData.daily.slice(0, 5).map((item: OpenWeatherOneCallData['daily'][0]) => ({
-          date: new Date(item.dt * 1000).toLocaleDateString([], { weekday: 'short' }),
-          temp: {
-            min: Math.round(item.temp.min),
-            max: Math.round(item.temp.max),
-          },
-          conditions: item.weather[0].main,
-          icon: getWeatherIcon(item.weather[0].main),
-        }));
+        const fiveDayForecast = forecastData.list
+          .filter((_item: ForecastResponse['list'][0], index: number) => index % 8 === 0) // Get one reading per day
+          .slice(0, 5)
+          .map((item: ForecastResponse['list'][0]) => ({
+            date: new Date(item.dt * 1000).toLocaleDateString([], { weekday: 'short' }),
+            temp: {
+              min: Math.round(item.main.temp_min),
+              max: Math.round(item.main.temp_max),
+            },
+            conditions: item.weather[0].main,
+            icon: getWeatherIcon(item.weather[0].main),
+          }));
 
-        // Get UV index risk level and recommendation
-        const getUVRiskLevel = (value: number) => {
-          if (value <= 2) return { level: "Low", recommendation: "No protection needed" };
-          if (value <= 5) return { level: "Moderate", recommendation: "Take precautions" };
-          if (value <= 7) return { level: "High", recommendation: "Protection essential" };
-          if (value <= 10) return { level: "Very High", recommendation: "Take extra precautions" };
-          return { level: "Extreme", recommendation: "Avoid sun exposure" };
+        // Calculate sunrise and sunset times from current weather data
+        const sunrise = new Date(currentData.sys.sunrise * 1000).toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+        const sunset = new Date(currentData.sys.sunset * 1000).toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+
+        // Get wind direction
+        const getWindDirection = (degrees: number) => {
+          const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+          return directions[Math.round(degrees / 45) % 8];
         };
-
-        const uvRisk = getUVRiskLevel(oneCallData.current.uvi);
 
         setDetailedData({
           city,
-          temperature: Math.round(oneCallData.current.temp),
-          humidity: oneCallData.current.humidity,
-          conditions: oneCallData.current.weather[0].main,
-          icon: getWeatherIcon(oneCallData.current.weather[0].main),
+          temperature: Math.round(currentData.main.temp),
+          humidity: currentData.main.humidity,
+          conditions: currentData.weather[0].main,
+          icon: getWeatherIcon(currentData.weather[0].main),
           hourlyForecast,
           details: {
-            feelsLike: Math.round(oneCallData.current.feels_like),
-            pressure: oneCallData.current.pressure,
-            windSpeed: oneCallData.current.wind_speed,
-            windDirection: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(oneCallData.current.wind_deg / 45) % 8],
-            sunrise: new Date(oneCallData.current.sunrise * 1000).toLocaleTimeString([], { 
-              hour: '2-digit', 
-              minute: '2-digit', 
-              hour12: true 
-            }),
-            sunset: new Date(oneCallData.current.sunset * 1000).toLocaleTimeString([], { 
-              hour: '2-digit', 
-              minute: '2-digit', 
-              hour12: true 
-            }),
+            feelsLike: Math.round(currentData.main.feels_like),
+            pressure: currentData.main.pressure,
+            windSpeed: currentData.wind.speed,
+            windDirection: getWindDirection(currentData.wind.deg),
+            sunrise,
+            sunset,
           },
-          airQuality: {
-            aqi: airQualityData.list[0].main.aqi,
-            components: airQualityData.list[0].components,
-          },
-          uvIndex: {
-            value: oneCallData.current.uvi,
-            riskLevel: uvRisk.level,
-            recommendation: uvRisk.recommendation,
-          },
-          alerts: oneCallData.alerts?.map((alert) => ({
-            event: alert.event,
-            description: alert.description,
-            severity: alert.tags?.[0] || "Moderate",
-            start: new Date(alert.start * 1000).toISOString(),
-            end: new Date(alert.end * 1000).toISOString(),
-          })) || [],
           fiveDayForecast,
         });
       } catch (error) {
         console.error("Error fetching detailed weather:", error);
-        setError(error instanceof Error ? error.message : "Failed to load weather details. Please try again later.");
+        setError(error instanceof Error ? error.message : "Failed to load weather details");
       } finally {
         setLoading(false);
       }
@@ -702,13 +646,17 @@ export default function WeatherPage() {
         citiesToFetch.push(selectedCity as AdditionalCity);
       }
 
+      // Check for API key before making any requests
+      if (!process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY) {
+        throw new Error(
+          'OpenWeather API key is not configured. ' +
+          'Please add NEXT_PUBLIC_OPENWEATHER_API_KEY to your Vercel environment variables ' +
+          'in Project Settings → Environment Variables.'
+        );
+      }
+
       const weatherPromises = citiesToFetch.map(async (city) => {
         try {
-          // Verify API key
-          if (!process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY) {
-            throw new Error('OpenWeather API key is not configured');
-          }
-
           // Fetch current weather
           const currentResponse = await fetch(
             `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
@@ -721,6 +669,14 @@ export default function WeatherPage() {
               statusText: currentResponse.statusText,
               error: errorData
             });
+            
+            // Provide more specific error messages
+            if (currentResponse.status === 401) {
+              throw new Error(
+                'Invalid API key. Please check if your OpenWeather API key is correct in your ' +
+                'Vercel environment variables and ensure it is activated.'
+              );
+            }
             throw new Error(`Failed to fetch weather for ${city}: ${errorData.message}`);
           }
 
@@ -744,7 +700,7 @@ export default function WeatherPage() {
           const forecastData = await forecastResponse.json() as ForecastResponse;
 
           // Get next 8 time slots (24 hours with 3-hour intervals)
-          const hourlyForecast = forecastData.list.slice(0, 8).map((item) => ({
+          const hourlyForecast = forecastData.list.slice(0, 8).map((item: ForecastResponse['list'][0]) => ({
             time: new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', hour12: true }),
             temp: Math.round(item.main.temp),
             conditions: item.weather[0].main,
