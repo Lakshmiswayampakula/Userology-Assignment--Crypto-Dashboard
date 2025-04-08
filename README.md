@@ -1,36 +1,127 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CryptoCoins Dashboard WebApp
+
+A modern Next.js application for tracking cryptocurrency markets, news, and related financial data with beautiful visualizations.
+
+## Features
+
+- **Crypto Market Overview**: Real-time price tracking and market data
+- **Interactive Charts**: Detailed cryptocurrency price history visualization
+- **Market Insights**: Comprehensive market analysis and trends
+- **News Integration**: Latest cryptocurrency news updates
+- **Currency Conversion**: Support for multiple currency views
+- **Weather Information**: Additional weather data feature
+- **Responsive UI**: Fully responsive design with dark/light mode support
+- **Data Tables**: Organized presentation of crypto market data
+
+## Technologies Used
+
+- **Framework**: Next.js 15
+- **Styling**: Tailwind CSS with animations
+- **State Management**: Zustand
+- **Data Fetching**: React Query (TanStack)
+- **UI Components**: Radix UI, Lucide Icons, Recharts
+- **Form Validation**: Zod
+- **Animation**: Framer Motion
+- **Date Handling**: date-fns
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js (v18 or higher recommended)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/your-repo/crypto-coins-dashboard.git
+```
+
+2. Navigate to the project directory:
+```bash
+cd crypto-coins-dashboard
+```
+
+3. Install dependencies:
+```bash
+npm install
+# or
+yarn install
+```
+
+### Running the Application
+
+- Development mode:
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Production build:
+```bash
+npm run build
+npm run start
+# or
+yarn build
+yarn start
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+crypto-coins-dashboard/
+├── app/                    # Next.js app router directory
+│   ├── Components/         # Reusable UI components
+│   │   ├── crypto-chart.tsx
+│   │   ├── crypto-news.tsx
+│   │   ├── market-table.tsx
+│   │   └── ... (other components)
+│   ├── data/               # Data fetching and schemas
+│   ├── hooks/              # Custom React hooks
+│   ├── currency/           # Currency conversion pages
+│   ├── news/               # News section
+│   ├── weather/            # Weather section
+│   └── ... (other app directories)
+├── components/             # Shared UI components
+├── lib/                    # Utility functions
+├── public/                 # Static assets
+└── ... (config files)
+```
 
-## Learn More
+## Configuration
 
-To learn more about Next.js, take a look at the following resources:
+The application can be configured through the following files:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `next.config.ts` - Next.js configuration
+- `tailwind.config.ts` - Tailwind CSS configuration
+- `postcss.config.mjs` - PostCSS configuration
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Environment Variables
 
-## Deploy on Vercel
+Create a `.env.local` file in the root directory with the following variables:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```env
+NEXT_PUBLIC_API_KEY=your_crypto_api_key
+NEXT_PUBLIC_NEWS_API_KEY=your_news_api_key
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Available Scripts
+
+- `dev`: Runs the app in development mode
+- `build`: Creates an optimized production build
+- `start`: Starts the production server
+- `lint`: Runs ESLint for code quality checks
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/your-feature`)
+3. Commit your changes (`git commit -m 'Add some feature'`)
+4. Push to the branch (`git push origin feature/your-feature`)
+5. Open a pull request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
