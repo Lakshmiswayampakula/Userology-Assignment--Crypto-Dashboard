@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSound } from "@/components/sound-provider";
 import { motion } from "framer-motion";
 import { TrendingUp, Activity, Calendar } from "lucide-react";
@@ -35,19 +35,17 @@ type CryptoHistory = {
   marketCap: number;
 };
 
-interface WeatherData {
-  dt: number;
-  main: {
-    temp: number;
+interface OpenWeatherOneCallData {
+  daily: Array<{
+    dt: number;
+    temp: {
+      day: number;
+    };
     humidity: number;
-  };
-  weather?: {
-    main: string;
-  }[];
-}
-
-interface WeatherResponse {
-  list: WeatherData[];
+    weather: Array<{
+      main: string;
+    }>;
+  }>;
 }
 
 export default function DetailsPage() {
@@ -63,27 +61,45 @@ export default function DetailsPage() {
   const [selectedCrypto, setSelectedCrypto] = useState("bitcoin");
   const [loadingCrypto, setLoadingCrypto] = useState(true);
 
-  const fetchWeatherHistory = async () => {
+  const fetchWeatherHistory = useCallback(async () => {
     try {
       setLoadingWeather(true);
       setWeatherError(null);
-      
-      const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/forecast?q=${selectedCity}&units=metric&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
+
+      // Get location data first
+      const geoResponse = await fetch(
+        `https://api.openweathermap.org/geo/1.0/direct?q=${selectedCity}&limit=1&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
       );
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Weather API Error: ${errorData.message || 'Failed to fetch weather data'}`);
+      if (!geoResponse.ok) {
+        const errorData = await geoResponse.json();
+        throw new Error(`Location API Error: ${errorData.message || 'Failed to fetch location data'}`);
       }
       
-      const data = (await response.json()) as WeatherResponse;
+      const [geoData] = await geoResponse.json();
+      
+      if (!geoData) {
+        throw new Error('Location not found');
+      }
 
-      const history = data.list.map((item: WeatherData) => ({
+      // Fetch weather data using OneCall API
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/onecall?lat=${geoData.lat}&lon=${geoData.lon}&units=metric&exclude=minutely,hourly,current&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Weather API Error: ${errorData.message || 'Failed to fetch weather data'} (Status: ${response.status})`);
+      }
+
+      const data = await response.json() as OpenWeatherOneCallData;
+
+      // Process the daily forecast data
+      const history = data.daily.map((item) => ({
         date: new Date(item.dt * 1000).toLocaleDateString(),
-        temperature: Math.round(item.main.temp),
-        humidity: item.main.humidity,
-        conditions: item.weather?.[0]?.main,
+        temperature: Math.round(item.temp.day),
+        humidity: item.humidity,
+        conditions: item.weather[0].main,
       }));
 
       setWeatherHistory(history);
@@ -93,12 +109,12 @@ export default function DetailsPage() {
     } finally {
       setLoadingWeather(false);
     }
-  };
+  }, [selectedCity]);
 
   // Use fetchWeatherHistory in useEffect
   useEffect(() => {
     fetchWeatherHistory();
-  }, [selectedCity]);
+  }, [fetchWeatherHistory]);
 
   // Fetch crypto history
   useEffect(() => {

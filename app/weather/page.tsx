@@ -41,6 +41,49 @@ interface WeatherData {
   hourlyForecast: HourlyForecast[];
 }
 
+interface OpenWeatherOneCallData {
+  current: {
+    temp: number;
+    humidity: number;
+    feels_like: number;
+    pressure: number;
+    wind_speed: number;
+    wind_deg: number;
+    sunrise: number;
+    sunset: number;
+    uvi: number;
+    weather: Array<{
+      main: string;
+      description: string;
+    }>;
+  };
+  hourly: Array<{
+    dt: number;
+    temp: number;
+    weather: Array<{
+      main: string;
+    }>;
+  }>;
+  daily: Array<{
+    dt: number;
+    temp: {
+      min: number;
+      max: number;
+      day: number;
+    };
+    weather: Array<{
+      main: string;
+    }>;
+  }>;
+  alerts?: Array<{
+    event: string;
+    description: string;
+    tags?: string[];
+    start: number;
+    end: number;
+  }>;
+}
+
 interface OpenWeatherForecastItem {
   dt: number;
   main: {
@@ -59,17 +102,12 @@ interface OpenWeatherForecastResponse {
   list: OpenWeatherForecastItem[];
 }
 
-interface OpenWeatherAlert {
-  sender_name: string;
+interface WeatherAlert {
   event: string;
-  start: number;
-  end: number;
   description: string;
-  tags: string[];
-}
-
-interface OpenWeatherAlertsResponse {
-  alerts?: OpenWeatherAlert[];
+  severity: string;
+  start: string;
+  end: string;
 }
 
 const PREDEFINED_CITIES = [
@@ -132,14 +170,6 @@ interface UVIndexData {
   recommendation: string;
 }
 
-interface WeatherAlert {
-  event: string;
-  description: string;
-  severity: string;
-  start: string;
-  end: string;
-}
-
 interface DetailedWeatherData {
   city: string;
   temperature: number;
@@ -188,77 +218,63 @@ function WeatherDetailsDialog({ city, isOpen, onClose }: {
         setLoading(true);
         setError(null);
         
-        // Fetch current weather
-        const currentResponse = await fetch(
-          `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
+        // Get location data first
+        const geoResponse = await fetch(
+          `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
         );
         
-        if (!currentResponse.ok) {
-          const errorData = await currentResponse.json();
-          throw new Error(`Weather API Error: ${errorData.message || 'Failed to fetch weather data'}`);
+        if (!geoResponse.ok) {
+          const errorData = await geoResponse.json();
+          throw new Error(`Location API Error: ${errorData.message || 'Failed to fetch location data'}`);
         }
         
-        const currentData = await currentResponse.json();
+        const [geoData] = await geoResponse.json();
+        
+        if (!geoData) {
+          throw new Error('Location not found');
+        }
 
-        // Fetch forecast data
-        const forecastResponse = await fetch(
-          `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
+        // Fetch current weather and forecast in one call
+        const oneCallResponse = await fetch(
+          `https://api.openweathermap.org/data/2.5/onecall?lat=${geoData.lat}&lon=${geoData.lon}&units=metric&exclude=minutely&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
         );
         
-        if (!forecastResponse.ok) {
-          const errorData = await forecastResponse.json();
-          throw new Error(`Forecast API Error: ${errorData.message || 'Failed to fetch forecast data'}`);
+        if (!oneCallResponse.ok) {
+          const errorData = await oneCallResponse.json();
+          throw new Error(`Weather API Error: ${errorData.message || 'Failed to fetch weather data'} (Status: ${oneCallResponse.status})`);
         }
         
-        const forecastData = await forecastResponse.json();
+        const oneCallData = await oneCallResponse.json() as OpenWeatherOneCallData;
 
         // Fetch air quality data
         const airQualityResponse = await fetch(
-          `https://api.openweathermap.org/data/2.5/air_pollution?lat=${currentData.coord.lat}&lon=${currentData.coord.lon}&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
+          `https://api.openweathermap.org/data/2.5/air_pollution?lat=${geoData.lat}&lon=${geoData.lon}&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
         );
+        
+        if (!airQualityResponse.ok) {
+          const errorData = await airQualityResponse.json();
+          throw new Error(`Air Quality API Error: ${errorData.message || 'Failed to fetch air quality data'} (Status: ${airQualityResponse.status})`);
+        }
+        
         const airQualityData = await airQualityResponse.json();
 
-        // Fetch UV index data
-        const uvResponse = await fetch(
-          `https://api.openweathermap.org/data/2.5/uvi?lat=${currentData.coord.lat}&lon=${currentData.coord.lon}&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
-        );
-        const uvData = await uvResponse.json();
-
-        // Fetch weather alerts
-        const alertsResponse = await fetch(
-          `https://api.openweathermap.org/data/2.5/onecall?lat=${currentData.coord.lat}&lon=${currentData.coord.lon}&exclude=current,minutely,hourly,daily&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
-        );
-        const alertsData = await alertsResponse.json() as OpenWeatherAlertsResponse;
-
-        // Process alerts if available
-        const alerts = alertsData.alerts?.map((alert: OpenWeatherAlert) => ({
-          event: alert.event,
-          description: alert.description,
-          severity: alert.tags[0] || "Moderate", // Use first tag as severity if available
-          start: new Date(alert.start * 1000).toISOString(),
-          end: new Date(alert.end * 1000).toISOString(),
-        })) || [];
-
         // Process hourly forecast
-        const hourlyForecast = forecastData.list.slice(0, 8).map((item: OpenWeatherForecastItem) => ({
+        const hourlyForecast = oneCallData.hourly.slice(0, 8).map((item: OpenWeatherOneCallData['hourly'][0]) => ({
           time: new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', hour12: true }),
-          temp: Math.round(item.main.temp),
+          temp: Math.round(item.temp),
           conditions: item.weather[0].main,
         }));
 
         // Process 5-day forecast
-        const fiveDayForecast = forecastData.list
-          .filter((item: OpenWeatherForecastItem, index: number) => index % 8 === 0)
-          .slice(0, 5)
-          .map((item: OpenWeatherForecastItem) => ({
-            date: new Date(item.dt * 1000).toLocaleDateString([], { weekday: 'short' }),
-            temp: {
-              min: Math.round(item.main.temp_min),
-              max: Math.round(item.main.temp_max),
-            },
-            conditions: item.weather[0].main,
-            icon: getWeatherIcon(item.weather[0].main),
-          }));
+        const fiveDayForecast = oneCallData.daily.slice(0, 5).map((item: OpenWeatherOneCallData['daily'][0]) => ({
+          date: new Date(item.dt * 1000).toLocaleDateString([], { weekday: 'short' }),
+          temp: {
+            min: Math.round(item.temp.min),
+            max: Math.round(item.temp.max),
+          },
+          conditions: item.weather[0].main,
+          icon: getWeatherIcon(item.weather[0].main),
+        }));
 
         // Get UV index risk level and recommendation
         const getUVRiskLevel = (value: number) => {
@@ -269,26 +285,26 @@ function WeatherDetailsDialog({ city, isOpen, onClose }: {
           return { level: "Extreme", recommendation: "Avoid sun exposure" };
         };
 
-        const uvRisk = getUVRiskLevel(uvData.value);
+        const uvRisk = getUVRiskLevel(oneCallData.current.uvi);
 
         setDetailedData({
           city,
-          temperature: Math.round(currentData.main.temp),
-          humidity: currentData.main.humidity,
-          conditions: currentData.weather[0].main,
-          icon: getWeatherIcon(currentData.weather[0].main),
+          temperature: Math.round(oneCallData.current.temp),
+          humidity: oneCallData.current.humidity,
+          conditions: oneCallData.current.weather[0].main,
+          icon: getWeatherIcon(oneCallData.current.weather[0].main),
           hourlyForecast,
           details: {
-            feelsLike: Math.round(currentData.main.feels_like),
-            pressure: currentData.main.pressure,
-            windSpeed: currentData.wind.speed,
-            windDirection: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(currentData.wind.deg / 45) % 8],
-            sunrise: new Date(currentData.sys.sunrise * 1000).toLocaleTimeString([], { 
+            feelsLike: Math.round(oneCallData.current.feels_like),
+            pressure: oneCallData.current.pressure,
+            windSpeed: oneCallData.current.wind_speed,
+            windDirection: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(oneCallData.current.wind_deg / 45) % 8],
+            sunrise: new Date(oneCallData.current.sunrise * 1000).toLocaleTimeString([], { 
               hour: '2-digit', 
               minute: '2-digit', 
               hour12: true 
             }),
-            sunset: new Date(currentData.sys.sunset * 1000).toLocaleTimeString([], { 
+            sunset: new Date(oneCallData.current.sunset * 1000).toLocaleTimeString([], { 
               hour: '2-digit', 
               minute: '2-digit', 
               hour12: true 
@@ -299,16 +315,22 @@ function WeatherDetailsDialog({ city, isOpen, onClose }: {
             components: airQualityData.list[0].components,
           },
           uvIndex: {
-            value: uvData.value,
+            value: oneCallData.current.uvi,
             riskLevel: uvRisk.level,
             recommendation: uvRisk.recommendation,
           },
-          alerts,
+          alerts: oneCallData.alerts?.map((alert) => ({
+            event: alert.event,
+            description: alert.description,
+            severity: alert.tags?.[0] || "Moderate",
+            start: new Date(alert.start * 1000).toISOString(),
+            end: new Date(alert.end * 1000).toISOString(),
+          })) || [],
           fiveDayForecast,
         });
       } catch (error) {
         console.error("Error fetching detailed weather:", error);
-        setError("Failed to load weather details. Please try again later.");
+        setError(error instanceof Error ? error.message : "Failed to load weather details. Please try again later.");
       } finally {
         setLoading(false);
       }
