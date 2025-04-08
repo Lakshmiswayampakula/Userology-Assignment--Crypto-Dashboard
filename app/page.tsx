@@ -9,16 +9,33 @@ import { MarketTable } from "./Components/market-table";
 import { TrendingCryptos } from "./Components/trending-cryptos";
 import { MarketInsights } from "./Components/market-insights";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState, useEffect } from "react";
 
 const queryClient = new QueryClient();
 
 export default function Home() {
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+
+  // Update the timestamp every 5 minutes to match the API data refresh
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLastUpdated(new Date());
+    }, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 min-h-screen">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-          Coin Cash Dashboard
-        </h1>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            Coin Cash Dashboard
+          </h1>
+          <div className="text-xs sm:text-sm text-muted-foreground">
+            Last updated: {lastUpdated.toLocaleDateString()} {lastUpdated.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+          </div>
+        </div>
         
         <Tabs defaultValue="trending" className="space-y-4">
           <TabsList className="grid w-full max-w-sm mx-auto grid-cols-3">

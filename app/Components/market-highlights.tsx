@@ -37,6 +37,7 @@ export function MarketHighlights() {
   } = useExchanges();
   const [categories, setCategories] = useState<Category[] | null>(null);
   const [totalPairs, setTotalPairs] = useState<number | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   //This use effect fetch the all categories data
   useEffect(() => {
@@ -52,6 +53,7 @@ export function MarketHighlights() {
         })
         .filter((item): item is Category => item !== null);
       setCategories(formattedData);
+      setLastUpdated(new Date());
     }
   }, [allCategoriesData]);
   // This useEffect fetches the exchanges data
@@ -63,6 +65,7 @@ export function MarketHighlights() {
       );
 
       setTotalPairs(totalPairs); // Save total pairs in state
+      setLastUpdated(new Date());
     }
   }, [allExchanges]);
 
@@ -106,7 +109,12 @@ export function MarketHighlights() {
       <Card className="p-6 space-y-6 rounded-xl shadow-sm overflow-hidden border-none bg-gradient-to-br from-card to-card/95 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/80">Market Highlights</h2>
-          <div className="h-1 w-20 bg-gradient-to-r from-primary/50 to-primary rounded-full"></div>
+          <div className="flex items-center space-x-2">
+            <div className="h-1 w-20 bg-gradient-to-r from-primary/50 to-primary rounded-full"></div>
+            <div className="text-xs text-muted-foreground">
+              Last updated: {lastUpdated.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+            </div>
+          </div>
         </div>
 
         {/* Show Categories - With Fallback */}

@@ -56,6 +56,7 @@ export default function DetailsPage() {
   const [selectedCity, setSelectedCity] = useState("London");
   const [loadingWeather, setLoadingWeather] = useState(true);
   const [weatherError, setWeatherError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const { playSound } = useSound();
 
   // State for crypto data
@@ -120,6 +121,7 @@ export default function DetailsPage() {
       }));
 
       setWeatherHistory(history);
+      setLastUpdated(new Date());
     } catch (error) {
       console.error("Error fetching weather history:", error);
       setWeatherError(error instanceof Error ? error.message : 'Failed to load weather data');
@@ -131,6 +133,13 @@ export default function DetailsPage() {
   // Use fetchWeatherHistory in useEffect
   useEffect(() => {
     fetchWeatherHistory();
+    
+    // Set up auto-refresh every 5 minutes
+    const interval = setInterval(() => {
+      fetchWeatherHistory();
+    }, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
   }, [fetchWeatherHistory]);
 
   // Fetch crypto history
@@ -151,6 +160,7 @@ export default function DetailsPage() {
         }));
 
         setCryptoHistory(history);
+        setLastUpdated(new Date());
       } catch (error) {
         console.error("Error fetching crypto history:", error);
       } finally {
@@ -159,19 +169,31 @@ export default function DetailsPage() {
     };
 
     fetchCryptoHistory();
+    
+    // Set up auto-refresh every 5 minutes
+    const interval = setInterval(() => {
+      fetchCryptoHistory();
+    }, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
   }, [selectedCrypto]);
 
   return (
     <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6 p-3 sm:p-4 md:p-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 border-b pb-3 sm:pb-4">
-        <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-        <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            Detailed Analysis
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            In-depth weather and cryptocurrency data analysis
-          </p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 border-b pb-3 sm:pb-4">
+        <div className="flex items-center space-x-2 sm:space-x-4">
+          <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+          <div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              Detailed Analysis
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              In-depth weather and cryptocurrency data analysis
+            </p>
+          </div>
+        </div>
+        <div className="text-xs sm:text-sm text-muted-foreground">
+          Last updated: {lastUpdated.toLocaleDateString()} {lastUpdated.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
         </div>
       </div>
 

@@ -25,6 +25,7 @@ interface NewsDataResponse {
 export default function NewsPage() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const { playSound } = useSound();
 
   useEffect(() => {
@@ -45,6 +46,7 @@ export default function NewsPage() {
         }));
         
         setNews(transformedNews);
+        setLastUpdated(new Date());
       } catch (error) {
         console.error("Error fetching news:", error);
       } finally {
@@ -53,6 +55,13 @@ export default function NewsPage() {
     };
 
     fetchNews();
+    
+    // Set up auto-refresh every 5 minutes
+    const interval = setInterval(() => {
+      fetchNews();
+    }, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) {
@@ -66,15 +75,20 @@ export default function NewsPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 p-4 sm:p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 border-b pb-4 sm:pb-6">
-        <Newspaper className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-        <div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            Latest Crypto News
-          </h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">
-            Stay updated with the latest cryptocurrency news and market insights
-          </p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 border-b pb-4 sm:pb-6">
+        <div className="flex items-center space-x-2 sm:space-x-4">
+          <Newspaper className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+          <div>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              Latest Crypto News
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">
+              Stay updated with the latest cryptocurrency news and market insights
+            </p>
+          </div>
+        </div>
+        <div className="text-xs sm:text-sm text-muted-foreground">
+          Last updated: {lastUpdated.toLocaleDateString()} {lastUpdated.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
         </div>
       </div>
 

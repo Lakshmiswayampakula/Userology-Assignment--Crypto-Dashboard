@@ -20,13 +20,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-
-import PaginationArea from "./pagination/pagination-area";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { CryptoData } from "./crypto-columns";
 import { useAppStore } from "@/app/hooks/useAppStore";
 import { useSound } from "@/components/sound-provider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Download } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -122,34 +128,61 @@ export function CryptoTable({
   };
 
   return (
-    <div className="  h-full flex flex-col">
-      <div className="flex items-center justify-between py-4 mb-4">
-        {/* input search */}
-        <Input
-          placeholder="Filter by crypto..."
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={updateInputChange}
-          className="max-w-sm"
-        />
-        <Button onClick={downloadCSV}>Download as CSV</Button>
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+          <Input
+            placeholder="Search cryptocurrencies..."
+            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+            onChange={updateInputChange}
+            className="w-full sm:w-[300px]"
+          />
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={downloadCSV}
+            className="w-full sm:w-auto"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Download CSV
+          </Button>
+        </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+            className="flex-1 sm:flex-none"
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+            className="flex-1 sm:flex-none"
+          >
+            Next
+          </Button>
+        </div>
       </div>
-      <div className="flex-1 overflow-y-auto rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} className="whitespace-nowrap">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
@@ -159,10 +192,9 @@ export function CryptoTable({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  onClick={() => playSound()}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="whitespace-nowrap">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -184,11 +216,32 @@ export function CryptoTable({
           </TableBody>
         </Table>
       </div>
-      <PaginationArea
-        table={table}
-        pagination={pagination}
-        setPagination={setPagination}
-      />
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <div className="flex-1 text-sm text-muted-foreground">
+          Page {table.getState().pagination.pageIndex + 1} of{" "}
+          {table.getPageCount()}
+        </div>
+        <div className="flex items-center space-x-2">
+          <p className="text-sm font-medium">Rows per page</p>
+          <Select
+            value={`${table.getState().pagination.pageSize}`}
+            onValueChange={(value) => {
+              table.setPageSize(Number(value));
+            }}
+          >
+            <SelectTrigger className="h-8 w-[70px]">
+              <SelectValue placeholder={table.getState().pagination.pageSize} />
+            </SelectTrigger>
+            <SelectContent side="top">
+              {[8, 10, 20, 30, 40, 50].map((pageSize) => (
+                <SelectItem key={pageSize} value={`${pageSize}`}>
+                  {pageSize}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
     </div>
   );
 }

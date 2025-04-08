@@ -13,6 +13,7 @@ import { CryptoTable } from "./data-table";
 import { cryptoColumns, CryptoData } from "./crypto-columns";
 import { allCryptosType } from "@/app/data/allCryptos";
 import { useAppStore } from "@/app/hooks/useAppStore";
+import { X } from "lucide-react";
 
 type SingleCoinType = Pick<
   allCryptosType[number],
@@ -66,19 +67,28 @@ export default function CryptoTableDialog({
           See all
         </Button>
       </DialogTrigger>
-      <DialogContent className="p-6 poppins max-h-svh">
-        <DialogHeader>
-          <DialogTitle className="text-[22px]">
+      <DialogContent className="p-4 sm:p-6 poppins max-h-[90vh] w-[95vw] sm:w-[90vw] md:w-[85vw] lg:w-[80vw] overflow-hidden">
+        <DialogHeader className="relative">
+          <DialogTitle className="text-lg sm:text-[22px] pr-8">
             All Cryptocurrencies
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm">
             View a comprehensive list of all available cryptocurrencies,
             including their prices, market capitalization, and other key
             details.
           </DialogDescription>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-0 top-0 sm:hidden"
+            onClick={() => setOpenDialog(false)}
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </Button>
         </DialogHeader>
-        <Separator />
-        <div className="flex-grow overflow-auto pr-2">
+        <Separator className="my-4" />
+        <div className="flex-grow overflow-auto pr-2 -mr-2">
           <CryptoTable columns={cryptoColumns} data={cryptoData} />
         </div>
       </DialogContent>

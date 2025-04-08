@@ -28,6 +28,7 @@ const fallbackGlobalData: GlobalData = {
 
 export function CryptoOverview() {
   const [globalData, setGlobalData] = useState<GlobalData>(fallbackGlobalData);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const { data: globalMarketData, isLoading } = useGlobalMarket();
 
   useEffect(() => {
@@ -74,6 +75,7 @@ export function CryptoOverview() {
         };
 
         setGlobalData(formattedData);
+        setLastUpdated(new Date());
       } catch (error) {
         console.error("Error parsing market data:", error);
 
@@ -127,7 +129,12 @@ export function CryptoOverview() {
       <Card className="p-6 space-y-6 rounded-xl shadow-sm overflow-hidden border-none bg-gradient-to-br from-card to-card/95 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/80">Market Overview</h2>
-          <div className="h-1 w-20 bg-gradient-to-r from-primary/50 to-primary rounded-full"></div>
+          <div className="flex items-center space-x-2">
+            <div className="h-1 w-20 bg-gradient-to-r from-primary/50 to-primary rounded-full"></div>
+            <div className="text-xs text-muted-foreground">
+              Last updated: {lastUpdated.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+            </div>
+          </div>
         </div>
 
         {/* Top Metrics Section */}

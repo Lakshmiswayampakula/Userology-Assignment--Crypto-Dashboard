@@ -20,7 +20,7 @@ import {
   Clock
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Define the type for insight with unit property
@@ -40,6 +40,7 @@ type InsightWithUnit = {
 export function MarketInsights() {
   const { data: insightsData, isLoading, error } = useMarketInsights();
   const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -64,6 +65,13 @@ export function MarketInsights() {
       }
     }
   };
+
+  // Update last updated timestamp when data changes
+  useEffect(() => {
+    if (insightsData) {
+      setLastUpdated(new Date());
+    }
+  }, [insightsData]);
 
   const getIcon = (iconName: string) => {
     switch (iconName) {
@@ -150,7 +158,12 @@ export function MarketInsights() {
   if (isLoading) {
     return (
       <div className="p-5">
-        <h2 className="text-2xl font-bold mb-4">Market Insights</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">Market Insights</h2>
+          <div className="text-xs text-muted-foreground">
+            Loading data...
+          </div>
+        </div>
         <p className="text-sm text-muted-foreground mb-6">
           Key metrics and on-chain data for cryptocurrency markets
         </p>
@@ -197,7 +210,12 @@ export function MarketInsights() {
 
   return (
     <div className="p-5">
-      <h2 className="text-2xl font-bold mb-4">Market Insights</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Market Insights</h2>
+        <div className="text-xs text-muted-foreground">
+          Last updated: {lastUpdated.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+        </div>
+      </div>
       <p className="text-sm text-muted-foreground mb-6">
         Key metrics and on-chain data for cryptocurrency markets
       </p>
