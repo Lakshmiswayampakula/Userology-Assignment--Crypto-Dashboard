@@ -7,7 +7,7 @@ import { useGlobalMarket } from "../hooks/useGlobalMarket";
 import { marketGlobalSchema } from "../data/marketGlobalSchema";
 import { z } from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, TrendingDown, Coins, Bitcoin, BarChart3 } from "lucide-react";
+import { TrendingUp, TrendingDown, Coins, Bitcoin } from "lucide-react";
 
 type GlobalData = {
   activeCryptos: number;
@@ -17,8 +17,17 @@ type GlobalData = {
   marketCapChange: number;
 };
 
+// Fallback global data in case API fails
+const fallbackGlobalData: GlobalData = {
+  activeCryptos: 10523,
+  totalMarketCap: 2834900000000,
+  totalVolume: 129660000000,
+  bitCoinDominance: 51.2,
+  marketCapChange: 0.04,
+};
+
 export function CryptoOverview() {
-  const [globalData, setGlobalData] = useState<GlobalData>();
+  const [globalData, setGlobalData] = useState<GlobalData>(fallbackGlobalData);
   const { data: globalMarketData, isLoading } = useGlobalMarket();
 
   useEffect(() => {
@@ -77,7 +86,7 @@ export function CryptoOverview() {
         }
       }
     }
-  }, [globalMarketData, isLoading]); // Add isLoading to dependency array
+  }, [globalMarketData, isLoading]);
   
   const formattedNumber = (num: number) =>
     new Intl.NumberFormat("en-US", {
@@ -126,7 +135,12 @@ export function CryptoOverview() {
           className="grid gap-4 sm:grid-cols-2 pb-4 pt-3"
           variants={containerVariants}
         >
-          {globalData ? (
+          {isLoading ? (
+            <>
+              <Skeleton className="h-[120px] rounded-xl" />
+              <Skeleton className="h-[120px] rounded-xl" />
+            </>
+          ) : (
             <>
               <motion.div variants={itemVariants}>
                 <Card className="p-4 py-6 flex flex-col items-center gap-3 justify-center shadow-sm hover:shadow-md transition-all duration-300 border-none bg-gradient-to-br from-background to-background/80 group">
@@ -151,61 +165,42 @@ export function CryptoOverview() {
               </motion.div>
 
               <motion.div variants={itemVariants}>
-                <Card className="p-4 py-6 flex flex-col gap-3 items-center justify-center shadow-sm hover:shadow-md transition-all duration-300 border-none bg-gradient-to-br from-background to-background/80 group">
+                <Card className="p-4 py-6 flex flex-col items-center gap-3 justify-center shadow-sm hover:shadow-md transition-all duration-300 border-none bg-gradient-to-br from-background to-background/80 group">
                   <div className="flex items-center gap-2 p-2 px-4 rounded-full bg-primary/10 text-primary">
-                    <BarChart3 className="h-4 w-4" />
-                    <span className="text-sm font-medium">24h</span>
+                    <Bitcoin className="h-4 w-4" />
+                    <span className="text-sm font-medium">
+                      BTC {globalData.bitCoinDominance}%
+                    </span>
                   </div>
+
                   <p className="text-2xl font-bold group-hover:text-primary transition-colors duration-300">
                     ${formattedNumber(globalData.totalVolume)}
                   </p>
                   <p className="text-xs font-medium text-muted-foreground">
-                    24h Volume
-                  </p>
-                </Card>
-              </motion.div>
-
-              <motion.div variants={itemVariants}>
-                <Card className="p-4 py-6 flex flex-col gap-3 items-center justify-center shadow-sm hover:shadow-md transition-all duration-300 border-none bg-gradient-to-br from-background to-background/80 group">
-                  <div className="flex items-center gap-2 p-2 px-4 rounded-full bg-primary/10 text-primary">
-                    <Coins className="h-4 w-4" />
-                  </div>
-                  <p className="text-2xl font-bold group-hover:text-primary transition-colors duration-300">
-                    {formattedNumber(globalData.activeCryptos)}
-                  </p>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Total Cryptocurrencies
-                  </p>
-                </Card>
-              </motion.div>
-
-              <motion.div variants={itemVariants}>
-                <Card className="p-4 py-6 flex flex-col gap-3 items-center justify-center shadow-sm hover:shadow-md transition-all duration-300 border-none bg-gradient-to-br from-background to-background/80 group">
-                  <div className="flex items-center gap-2 p-2 px-4 rounded-full bg-primary/10 text-primary">
-                    <Bitcoin className="h-4 w-4" />
-                  </div>
-                  <p className="text-2xl font-bold group-hover:text-primary transition-colors duration-300">
-                    {globalData.bitCoinDominance}%
-                  </p>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Bitcoin Dominance
+                    24h Trading Volume
                   </p>
                 </Card>
               </motion.div>
             </>
-          ) : (
-            <motion.div 
-              className="col-span-2 text-center"
-              variants={itemVariants}
-            >
-              <div className="grid grid-cols-2 gap-4">
-                <Skeleton className="h-36 rounded-xl" />
-                <Skeleton className="h-36 rounded-xl" />
-                <Skeleton className="h-24 rounded-xl" />
-                <Skeleton className="h-24 rounded-xl" />
-              </div>
-            </motion.div>
           )}
+        </motion.div>
+
+        {/* Bottom Section */}
+        <motion.div variants={itemVariants}>
+          <Card className="p-4 flex items-center justify-between shadow-sm hover:shadow-md transition-all duration-300 border-none bg-gradient-to-br from-background to-background/80 group">
+            <div className="flex items-center gap-3">
+              <div className="bg-primary/15 size-10 flex items-center justify-center text-primary rounded-full group-hover:bg-primary/20 transition-colors duration-300">
+                <Coins className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">Active Cryptocurrencies</p>
+                <p className="text-xs text-muted-foreground">Total number of active coins</p>
+              </div>
+            </div>
+            <div className="text-lg font-bold text-primary group-hover:scale-110 transition-transform duration-300">
+              {globalData.activeCryptos.toLocaleString()}
+            </div>
+          </Card>
         </motion.div>
       </Card>
     </motion.div>

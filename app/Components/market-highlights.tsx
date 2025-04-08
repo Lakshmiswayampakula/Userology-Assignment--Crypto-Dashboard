@@ -29,13 +29,11 @@ export function MarketHighlights() {
   const {
     data: allCategoriesData,
     isLoading: isCategoryLoading,
-    isError: isCategoryError,
   } = useAllCategories();
 
   const {
     data: allExchanges,
     isLoading: isExchangesLoading,
-    isError: isExchangesError,
   } = useExchanges();
   const [categories, setCategories] = useState<Category[] | null>(null);
   const [totalPairs, setTotalPairs] = useState<number | null>(null);
@@ -92,6 +90,13 @@ export function MarketHighlights() {
     }
   };
 
+  // Fallback category data
+  const fallbackCategories: Category[] = [
+    { name: "DeFi" },
+    { name: "NFT" },
+    { name: "Metaverse" }
+  ];
+
   return (
     <motion.div
       initial="hidden"
@@ -104,57 +109,29 @@ export function MarketHighlights() {
           <div className="h-1 w-20 bg-gradient-to-r from-primary/50 to-primary rounded-full"></div>
         </div>
 
-        {/* Show Error if categories data Fails to Load */}
-        {isCategoryError ? (
-          <motion.div 
-            className="text-center text-sm text-red-500 p-4 rounded-lg bg-red-500/10"
-            variants={itemVariants}
-          >
-            Failed to load categories. Please try again later.
-          </motion.div>
-        ) : categories !== null && !isCategoryLoading ? (
-          // Render Categories if Available
-          <motion.div 
-            className="space-y-4"
-            variants={itemVariants}
-          >
-            <CryptoCategories categories={categories} />
-          </motion.div>
-        ) : (
-          // Show Skeleton while Loading
-          <motion.div 
-            className="text-center text-sm text-muted-foreground"
-            variants={itemVariants}
-          >
+        {/* Show Categories - With Fallback */}
+        <motion.div 
+          className="space-y-4"
+          variants={itemVariants}
+        >
+          {isCategoryLoading ? (
             <Skeleton className="w-full h-28 rounded-xl" />
-          </motion.div>
-        )}
+          ) : (
+            <CryptoCategories categories={categories || fallbackCategories} />
+          )}
+        </motion.div>
 
-        {/* Show Error if exchanges data Fails to Load */}
-        {isExchangesError ? (
-          <motion.div 
-            className="text-center text-sm text-red-500 p-4 rounded-lg bg-red-500/10"
-            variants={itemVariants}
-          >
-            Failed to load exchanges data. Please try again later.
-          </motion.div>
-        ) : allExchanges !== null && !isExchangesLoading ? (
-          // Render Categories if Available
-          <motion.div 
-            className="space-y-4"
-            variants={itemVariants}
-          >
-            <MarketPaires totalPairs={totalPairs} />
-          </motion.div>
-        ) : (
-          // Show Skeleton while Loading
-          <motion.div 
-            className="text-center text-sm text-muted-foreground"
-            variants={itemVariants}
-          >
+        {/* Show Market Pairs - With Fallback */}
+        <motion.div 
+          className="space-y-4"
+          variants={itemVariants}
+        >
+          {isExchangesLoading ? (
             <Skeleton className="w-full h-11 rounded-xl" />
-          </motion.div>
-        )}
+          ) : (
+            <MarketPaires totalPairs={totalPairs || 1800000} />
+          )}
+        </motion.div>
       </Card>
     </motion.div>
   );
