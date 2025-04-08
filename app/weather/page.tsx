@@ -187,16 +187,29 @@ function WeatherDetailsDialog({ city, isOpen, onClose }: {
       try {
         setLoading(true);
         setError(null);
+        
         // Fetch current weather
         const currentResponse = await fetch(
           `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
         );
+        
+        if (!currentResponse.ok) {
+          const errorData = await currentResponse.json();
+          throw new Error(`Weather API Error: ${errorData.message || 'Failed to fetch weather data'}`);
+        }
+        
         const currentData = await currentResponse.json();
 
         // Fetch forecast data
         const forecastResponse = await fetch(
           `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
         );
+        
+        if (!forecastResponse.ok) {
+          const errorData = await forecastResponse.json();
+          throw new Error(`Forecast API Error: ${errorData.message || 'Failed to fetch forecast data'}`);
+        }
+        
         const forecastData = await forecastResponse.json();
 
         // Fetch air quality data

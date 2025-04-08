@@ -55,6 +55,7 @@ export default function DetailsPage() {
   const [weatherHistory, setWeatherHistory] = useState<WeatherHistory[]>([]);
   const [selectedCity, setSelectedCity] = useState("London");
   const [loadingWeather, setLoadingWeather] = useState(true);
+  const [weatherError, setWeatherError] = useState<string | null>(null);
   const { playSound } = useSound();
 
   // State for crypto data
@@ -62,31 +63,40 @@ export default function DetailsPage() {
   const [selectedCrypto, setSelectedCrypto] = useState("bitcoin");
   const [loadingCrypto, setLoadingCrypto] = useState(true);
 
-  // Fetch weather history
-  useEffect(() => {
-    const fetchWeatherHistory = async () => {
-      try {
-        setLoadingWeather(true);
-        const response = await fetch(
-          `https://api.openweathermap.org/data/2.5/forecast?q=${selectedCity}&units=metric&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
-        );
-        const data = (await response.json()) as WeatherResponse;
-
-        const history = data.list.map((item: WeatherData) => ({
-          date: new Date(item.dt * 1000).toLocaleDateString(),
-          temperature: Math.round(item.main.temp),
-          humidity: item.main.humidity,
-          conditions: item.weather?.[0]?.main,
-        }));
-
-        setWeatherHistory(history);
-      } catch (error) {
-        console.error("Error fetching weather history:", error);
-      } finally {
-        setLoadingWeather(false);
+  const fetchWeatherHistory = async () => {
+    try {
+      setLoadingWeather(true);
+      setWeatherError(null);
+      
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/forecast?q=${selectedCity}&units=metric&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Weather API Error: ${errorData.message || 'Failed to fetch weather data'}`);
       }
-    };
+      
+      const data = (await response.json()) as WeatherResponse;
 
+      const history = data.list.map((item: WeatherData) => ({
+        date: new Date(item.dt * 1000).toLocaleDateString(),
+        temperature: Math.round(item.main.temp),
+        humidity: item.main.humidity,
+        conditions: item.weather?.[0]?.main,
+      }));
+
+      setWeatherHistory(history);
+    } catch (error) {
+      console.error("Error fetching weather history:", error);
+      setWeatherError(error instanceof Error ? error.message : 'Failed to load weather data');
+    } finally {
+      setLoadingWeather(false);
+    }
+  };
+
+  // Use fetchWeatherHistory in useEffect
+  useEffect(() => {
     fetchWeatherHistory();
   }, [selectedCity]);
 
@@ -186,6 +196,16 @@ export default function DetailsPage() {
                     {loadingWeather ? (
                       <div className="w-full h-full flex items-center justify-center">
                         <Skeleton className="w-full h-full" />
+                      </div>
+                    ) : weatherError ? (
+                      <div className="w-full h-full flex items-center justify-center flex-col gap-2">
+                        <p className="text-red-500 text-sm">{weatherError}</p>
+                        <button 
+                          onClick={() => fetchWeatherHistory()}
+                          className="text-xs px-3 py-1 bg-primary/10 hover:bg-primary/20 text-primary rounded"
+                        >
+                          Retry
+                        </button>
                       </div>
                     ) : (
                       <ResponsiveContainer width="100%" height="100%">
