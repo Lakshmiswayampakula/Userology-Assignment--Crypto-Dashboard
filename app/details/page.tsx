@@ -35,17 +35,19 @@ type CryptoHistory = {
   marketCap: number;
 };
 
-interface OpenWeatherOneCallData {
-  daily: Array<{
-    dt: number;
-    temp: {
-      day: number;
-    };
+interface WeatherForecastItem {
+  dt: number;
+  main: {
+    temp: number;
     humidity: number;
-    weather: Array<{
-      main: string;
-    }>;
+  };
+  weather: Array<{
+    main: string;
   }>;
+}
+
+interface WeatherForecastResponse {
+  list: WeatherForecastItem[];
 }
 
 export default function DetailsPage() {
@@ -66,39 +68,54 @@ export default function DetailsPage() {
       setLoadingWeather(true);
       setWeatherError(null);
 
+      // First, verify if we have an API key
+      if (!process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY) {
+        throw new Error('OpenWeather API key is not configured. Please check your environment variables.');
+      }
+
       // Get location data first
       const geoResponse = await fetch(
-        `https://api.openweathermap.org/geo/1.0/direct?q=${selectedCity}&limit=1&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
+        `https://api.openweathermap.org/data/2.5/weather?q=${selectedCity}&units=metric&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
       );
       
       if (!geoResponse.ok) {
         const errorData = await geoResponse.json();
-        throw new Error(`Location API Error: ${errorData.message || 'Failed to fetch location data'}`);
+        console.error('Weather API Error:', {
+          status: geoResponse.status,
+          statusText: geoResponse.statusText,
+          error: errorData
+        });
+        throw new Error(`Weather API Error: ${errorData.message || 'Failed to fetch location data'}`);
       }
       
-      const [geoData] = await geoResponse.json();
+      const locationData = await geoResponse.json();
       
-      if (!geoData) {
+      if (!locationData) {
         throw new Error('Location not found');
       }
 
-      // Fetch weather data using OneCall API
+      // Fetch forecast data
       const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/onecall?lat=${geoData.lat}&lon=${geoData.lon}&units=metric&exclude=minutely,hourly,current&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
+        `https://api.openweathermap.org/data/2.5/forecast?q=${selectedCity}&units=metric&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
       );
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`Weather API Error: ${errorData.message || 'Failed to fetch weather data'} (Status: ${response.status})`);
+        console.error('Forecast API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        throw new Error(`Forecast API Error: ${errorData.message || 'Failed to fetch weather data'}`);
       }
 
-      const data = await response.json() as OpenWeatherOneCallData;
+      const data = await response.json() as WeatherForecastResponse;
 
-      // Process the daily forecast data
-      const history = data.daily.map((item) => ({
+      // Process the forecast data
+      const history = data.list.map((item: WeatherForecastItem) => ({
         date: new Date(item.dt * 1000).toLocaleDateString(),
-        temperature: Math.round(item.temp.day),
-        humidity: item.humidity,
+        temperature: Math.round(item.main.temp),
+        humidity: item.main.humidity,
         conditions: item.weather[0].main,
       }));
 

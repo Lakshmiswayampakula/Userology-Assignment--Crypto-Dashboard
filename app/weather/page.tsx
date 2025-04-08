@@ -84,24 +84,6 @@ interface OpenWeatherOneCallData {
   }>;
 }
 
-interface OpenWeatherForecastItem {
-  dt: number;
-  main: {
-    temp: number;
-    temp_min: number;
-    temp_max: number;
-    humidity: number;
-  };
-  weather: Array<{
-    main: string;
-    description: string;
-  }>;
-}
-
-interface OpenWeatherForecastResponse {
-  list: OpenWeatherForecastItem[];
-}
-
 interface WeatherAlert {
   event: string;
   description: string;
@@ -201,6 +183,28 @@ interface DetailedWeatherData {
     conditions: string;
     icon: JSX.Element;
   }[];
+}
+
+interface WeatherResponse {
+  main: {
+    temp: number;
+    humidity: number;
+  };
+  weather: Array<{
+    main: string;
+  }>;
+}
+
+interface ForecastResponse {
+  list: Array<{
+    dt: number;
+    main: {
+      temp: number;
+    };
+    weather: Array<{
+      main: string;
+    }>;
+  }>;
 }
 
 function WeatherDetailsDialog({ city, isOpen, onClose }: { 
@@ -692,50 +696,73 @@ export default function WeatherPage() {
   const fetchWeatherData = useCallback(async () => {
     try {
       setIsRefreshing(true);
+      setLoading(true);
       const citiesToFetch: City[] = [...PREDEFINED_CITIES];
       if (selectedCity) {
         citiesToFetch.push(selectedCity as AdditionalCity);
       }
 
       const weatherPromises = citiesToFetch.map(async (city) => {
-        // Fetch current weather
-        const currentResponse = await fetch(
-          `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
-        );
-        
-        if (!currentResponse.ok) {
-          throw new Error(`Failed to fetch weather for ${city}`);
+        try {
+          // Verify API key
+          if (!process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY) {
+            throw new Error('OpenWeather API key is not configured');
+          }
+
+          // Fetch current weather
+          const currentResponse = await fetch(
+            `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
+          );
+
+          if (!currentResponse.ok) {
+            const errorData = await currentResponse.json();
+            console.error(`Weather API Error for ${city}:`, {
+              status: currentResponse.status,
+              statusText: currentResponse.statusText,
+              error: errorData
+            });
+            throw new Error(`Failed to fetch weather for ${city}: ${errorData.message}`);
+          }
+
+          const currentData = await currentResponse.json() as WeatherResponse;
+
+          // Fetch forecast data
+          const forecastResponse = await fetch(
+            `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
+          );
+
+          if (!forecastResponse.ok) {
+            const errorData = await forecastResponse.json();
+            console.error(`Forecast API Error for ${city}:`, {
+              status: forecastResponse.status,
+              statusText: forecastResponse.statusText,
+              error: errorData
+            });
+            throw new Error(`Failed to fetch forecast for ${city}: ${errorData.message}`);
+          }
+
+          const forecastData = await forecastResponse.json() as ForecastResponse;
+
+          // Get next 8 time slots (24 hours with 3-hour intervals)
+          const hourlyForecast = forecastData.list.slice(0, 8).map((item) => ({
+            time: new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', hour12: true }),
+            temp: Math.round(item.main.temp),
+            conditions: item.weather[0].main,
+            icon: getWeatherIcon(item.weather[0].main),
+          }));
+
+          return {
+            city,
+            temperature: Math.round(currentData.main.temp),
+            humidity: currentData.main.humidity,
+            conditions: currentData.weather[0].main,
+            icon: getWeatherIcon(currentData.weather[0].main),
+            hourlyForecast,
+          };
+        } catch (error) {
+          console.error(`Error fetching data for ${city}:`, error);
+          throw error;
         }
-        
-        const currentData = await currentResponse.json();
-
-        // Fetch forecast data
-        const forecastResponse = await fetch(
-          `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
-        );
-
-        if (!forecastResponse.ok) {
-          throw new Error(`Failed to fetch forecast for ${city}`);
-        }
-
-        const forecastData = await forecastResponse.json() as OpenWeatherForecastResponse;
-        
-        // Get next 8 time slots (24 hours with 3-hour intervals)
-        const hourlyForecast = forecastData.list.slice(0, 8).map((item: OpenWeatherForecastItem) => ({
-          time: new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', hour12: true }),
-          temp: Math.round(item.main.temp),
-          conditions: item.weather[0].main,
-          icon: getWeatherIcon(item.weather[0].main),
-        }));
-
-        return {
-          city,
-          temperature: Math.round(currentData.main.temp),
-          humidity: currentData.main.humidity,
-          conditions: currentData.weather[0].main,
-          icon: getWeatherIcon(currentData.weather[0].main),
-          hourlyForecast,
-        };
       });
 
       const results = await Promise.all(weatherPromises);
@@ -743,7 +770,7 @@ export default function WeatherPage() {
       setError(null);
     } catch (error) {
       console.error("Error fetching weather data:", error);
-      setError("Failed to load weather data. Please try again later.");
+      setError(error instanceof Error ? error.message : "Failed to load weather data. Please try again later.");
     } finally {
       setLoading(false);
       setIsRefreshing(false);
